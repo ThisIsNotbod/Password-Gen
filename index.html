@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Password Gen</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; max-width: 500px; margin: 40px auto; padding: 20px; background: #1a1a2e; color: #eee; }
+    h1 { text-align: center; color: #e94560; }
+    .card { background: #16213e; padding: 20px; border-radius: 12px; margin-bottom: 16px; }
+    label { display: block; margin-bottom: 6px; color: #a0aec0; font-size: 14px; }
+    input[type=text], input[type=number] { width: 100%; padding: 10px; border: 1px solid #2d3748; border-radius: 8px; background: #0f3460; color: white; font-size: 16px; }
+    .options { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .option { flex: 1; min-width: 80px; }
+    .option input { display: none; }
+    .option label { background: #0f3460; border: 2px solid #2d3748; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; color: #eee; font-size: 14px; margin: 0; }
+    .option input:checked + label { border-color: #e94560; color: #e94560; }
+    .checkbox-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+    .checkbox-row label { display: flex; align-items: center; gap: 6px; cursor: pointer; color: #eee; font-size: 14px; margin: 0; }
+    button { width: 100%; padding: 14px; background: #e94560; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin-top: 8px; font-weight: bold; }
+    button:hover { background: #c73652; }
+    .result-box { background: #0f3460; border-radius: 8px; padding: 16px; font-family: monospace; font-size: 18px; word-break: break-all; min-height: 60px; text-align: center; color: #e94560; letter-spacing: 2px; }
+    .copy-btn { background: #2d3748; margin-top: 8px; font-size: 14px; padding: 10px; }
+    .copy-btn:hover { background: #4a5568; }
+    .strength { text-align: center; margin-top: 8px; font-size: 14px; }
+    .weak { color: #fc8181; }
+    .medium { color: #f6ad55; }
+    .strong { color: #68d391; }
+  </style>
+</head>
+<body>
+  <h1>🔐 Password Gen</h1>
+  <div class="card">
+    <label>Password Length</label>
+    <input type="number" id="length" value="12" min="4" max="32" />
+  </div>
+  <div class="card">
+    <label>Include</label>
+    <div class="checkbox-row">
+      <label><input type="checkbox" id="upper" checked> Uppercase</label>
+      <label><input type="checkbox" id="lower" checked> Lowercase</label>
+      <label><input type="checkbox" id="numbers" checked> Numbers</label>
+      <label><input type="checkbox" id="symbols"> Symbols</label>
+    </div>
+  </div>
+  <div class="card">
+    <label>Keyword (optional)</label>
+    <input type="text" id="keyword" placeholder="e.g. Bob1" />
+    <div class="options" style="margin-top:12px;">
+      <div class="option"><input type="radio" name="pos" id="posStart" value="start" checked><label for="posStart">Start</label></div>
+      <div class="option"><input type="radio" name="pos" id="posMiddle" value="middle"><label for="posMiddle">Middle</label></div>
+      <div class="option"><input type="radio" name="pos" id="posEnd" value="end"><label for="posEnd">End</label></div>
+    </div>
+  </div>
+  <button onclick="generate()">Generate Password</button>
+  <div class="card" style="margin-top:16px;">
+    <div class="result-box" id="result">Click generate!</div>
+    <div class="strength" id="strength"></div>
+    <button class="copy-btn" onclick="copy()">📋 Copy Password</button>
+  </div>
+  <script>
+    function getRandom(chars, count) {
+      let result = '';
+      for (let i = 0; i < count; i++) result += chars[Math.floor(Math.random() * chars.length)];
+      return result;
+    }
+    function shuffle(str) {
+      return str.split('').sort(() => Math.random() - 0.5).join('');
+    }
+    function generate() {
+      const length = parseInt(document.getElementById('length').value);
+      const upper = document.getElementById('upper').checked;
+      const lower = document.getElementById('lower').checked;
+      const numbers = document.getElementById('numbers').checked;
+      const symbols = document.getElementById('symbols').checked;
+      const keyword = document.getElementById('keyword').value;
+      const pos = document.querySelector('input[name="pos"]:checked').value;
+      let chars = '';
+      if (upper) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      if (lower) chars += 'abcdefghijklmnopqrstuvwxyz';
+      if (numbers) chars += '0123456789';
+      if (symbols) chars += '!@#$%^&*()_+-=[]{}';
+      if (!chars) { alert('Pick at least one character type!'); return; }
+      const fillLen = Math.max(0, length - keyword.length);
+      const fill = shuffle(getRandom(chars, fillLen));
+      let password = '';
+      if (!keyword) { password = fill; }
+      else if (pos === 'start') { password = keyword + fill; }
+      else if (pos === 'end') { password = fill + keyword; }
+      else { const mid = Math.floor(fill.length / 2); password = fill.slice(0, mid) + keyword + fill.slice(mid); }
+      document.getElementById('result').textContent = password;
+      const s = document.getElementById('strength');
+      if (password.length < 8) { s.textContent = '⚠️ Weak'; s.className = 'strength weak'; }
+      else if (password.length < 12) { s.textContent = '👍 Medium'; s.className = 'strength medium'; }
+      else { s.textContent = '💪 Strong'; s.className = 'strength strong'; }
+    }
+    function copy() {
+      const text = document.getElementById('result').textContent;
+      if (text === 'Click generate!') return;
+      navigator.clipboard.writeText(text).then(() => alert('Copied!'));
+    }
+  </script>
+</body>
+</html>
